@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 import bisect
 
-import sys
-import time
-
-timestamp = []
-
 class EmptyList: pass
 
 class Median:
@@ -13,12 +8,10 @@ class Median:
     self.data = []
     
   def operation(self, command, value):
-    begin = time.clock()
     if command == "add":
       bisect.insort_left(self.data, value)
     elif command == "remove":
       self.data.remove(value)
-    timestamp.append(time.clock() - begin)
   
   def __call__(self):
     if len(self.data) == 0: raise EmptyList()
@@ -60,9 +53,5 @@ class Reader:
 
 if __name__ == '__main__':
   import sys
-  processbegin = time.clock()
   for i in Reader(sys.stdin):
     print i
-
-  print >> sys.stderr, "total time:", time.clock() - processbegin
-  print >> sys.stderr, sum(timestamp)/len(timestamp)
