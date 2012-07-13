@@ -6,7 +6,7 @@ class K_Difference:
   def __init__(self, K, Numbers):
     self.K = K
     self.Numbers = Numbers
-  
+
   def __repr__(self):
     commenout = '''def inner_search(nums, count = 0):
       if nums:
@@ -34,7 +34,11 @@ class K_Difference:
         offset = offset + 1
       return count
     
-    return str(inner_search(sorted(self.Numbers)))
+    try: 
+      return self.result
+    except AttributeError:
+      self.result = str(inner_search(sorted(self.Numbers)))
+      return self.result
 
 if __name__ == '__main__':
   (N, K) = map(int, sys.stdin.next().split())
