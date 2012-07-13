@@ -1,6 +1,18 @@
 #!/usr/bin/env python
 import time
 import sys
+
+
+class Teller:
+  def __init__(self,values):
+    self.values = values
+ 
+  def __repr__(self):
+    return "Telling: " + " ".join(map(str,self.values))
+
+def timestamp(begin,comment = ""):
+   print >> sys.stderr, comment, str(time.clock() - begin)
+
 def int_factorize(n):
   def prime():
     yield 2
@@ -53,32 +65,55 @@ class UnfriendlyNumber:
     self.UnfriendNumbers = UnfriendNumbers
   
   def __call__(self):
-    begin = time.clock()
+    call_begin = time.clock()
     GCDs = []
-    for UnfriendNumber in self.UnfriendNumbers:
-      GCD = Euclidean(*sorted([self.friendNumber, UnfriendNumber]))
-      if not filter(lambda x: not(x % GCD), GCDs):
-        GCDs.append(GCD)
+    begin = time.clock()
+    for unfnum in self.UnfriendNumbers:
+      GCDs.append(Euclidean(self.friendNumber, unfnum))
+    timestamp(begin, "euclidean:")
+    
+    begin = time.clock()
     GCDs_factorized = map(int_factorize, GCDs)
-    common_divisors = reduce(lambda x,y: set(x).union(set(y)),
-                             map(gen_divisor, GCDs_factorized))
-    fnum_divisors = gen_divisor(int_factorize(self.friendNumber))
+    timestamp(begin, "gcd factorize:")
+    
+    begin = time.clock()
+    common_divisors = map(gen_divisor, GCDs_factorized)
+    timestamp(begin, "gen common divisor:")
+    
+    begin = time.clock()
+    uniq_common_divisors = reduce(lambda x,y: set(x).union(set(y)),
+                                  common_divisors )
+    timestamp(begin, "uniq common divisor:")
+    
+    begin = time.clock()
+    friend_decomposed = int_factorize(self.friendNumber)
+    timestamp(begin, "friend factorize:")
+    
+    begin = time.clock()
+    fnum_divisors = gen_divisor(friend_decomposed)
+    timestamp(begin, "cal friendnum divisor:")
+    
+    begin = time.clock()
     res = len(filter(lambda x: x not in common_divisors, fnum_divisors))
-    print >> sys.stderr, "time:", time.closk() - begin
+    timestamp(begin, "cal result:")
+    timestamp(call_begin, "call all:")
     return res
 
 class Reader:
   def __init__(self, file):
     self.file = file
     (self.num_of_unf, self.friendNumber) = map(int,
-                                          self.file.next().strip().split())
+                                          self.file.next().split())
     self.unfriendNumber = UnfriendlyNumber(self.friendNumber, 
                                       map(int,
-                                          self.file.next().strip().split())
+                                          self.file.next().split())
                                      )
   
   def __repr__(self):
-    return str(self.unfriendNumber())
+    begin = time.clock()
+    res = str(self.unfriendNumber())
+    print >> sys.stderr, "read:", time.clock() - begin
+    return res
 
 if __name__ == "__main__":
   import sys
