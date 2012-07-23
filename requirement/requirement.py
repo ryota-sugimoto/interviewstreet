@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import sys
-import bisect
-import random
 import time
+
 class RangeCache:
   def __init__(self, m, n):
     self.cache = {}
@@ -18,7 +17,9 @@ class Requirements:
   def __init__(self, num, requirements):
     self.num = num
     self.reqs = requirements
+    print >> sys.stderr, self.reqs
     self.optimize()
+    print >> sys.stderr, self.reqs
     self.make_cache()
     self.rangeCache = RangeCache(0,10)
     
@@ -38,14 +39,40 @@ class Requirements:
          for index in req:
            count[index] = count.get(index, 0) + 1
        return count
+     
+     def related_req(index):
+       return filter(lambda req: index in req, self.reqs)
+     
+     def inner_optimize(opt, remain):
+       if not remain: 
+         return opt
+       score = {}
+       for n in opt:
+         for m in remain:
+           score[m] = score.get(m, 0) + len(filter( lambda req: m in req,
+                                                     related_req(n))
+                                           )
+       
+       print >> sys.stderr, "score:", score
+       best_score = sorted(score.keys(),
+                           key = lambda key: score[key],
+                           reverse = True)[0]
+       remain.remove(best_score)
+       return inner_optimize(opt + [best_score], remain)
+       
+       
      count = req_count(self.reqs)
-     opt_indices = sorted(count.keys(),
+     most_affecting = sorted(count.keys(),
                           key = lambda key: count[key],
-                          reverse = True)
-     no_related = set(range(self.num)) - set(opt_indices)
-     opt_indices = opt_indices + sorted(list(no_related))
+                          reverse = True)[0]
+     print >> sys.stderr, "most:", most_affecting
+     remain = range(self.num)
+     remain.remove(most_affecting)
+     opt_indices = inner_optimize([most_affecting], remain)
+     print >> sys.stderr, "opt:", opt_indices
      res = []
      for req in self.reqs:
+         
          res.append([opt_indices[req[0]], opt_indices[req[1]]])
      self.reqs = res
        
@@ -66,7 +93,8 @@ class Requirements:
         if tar < index:
           tmp = assigned_num[tar]
           min = tmp if tmp > min else min
-    return self.rangeCache(min,max)
+    #print >> sys.stderr, "min:", min, "max:", max, "range:", max-min
+    return xrange(min,max)
   
 rec = 0
 class Variables:
@@ -103,5 +131,5 @@ def reader(file):
 
 if __name__ == '__main__':
   begin = time.clock()
-  print >> sys.stderr, reader(sys.stdin) % 1007
+  print reader(sys.stdin) % 1007
   print >> sys.stderr, time.clock() - begin
